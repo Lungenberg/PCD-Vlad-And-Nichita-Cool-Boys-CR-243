@@ -1,11 +1,19 @@
+import java.util.function.Consumer;
+
 public class StudentA {
     private final int[] array;
 
     private long sumForward = 0;
     private long sumBackward = 0;
 
+    public Consumer<String> output = System.out::println;
+
     public StudentA(int[] array) {
         this.array = array;
+    }
+
+    public void setOutput(Consumer<String> output) {
+        this.output = output;
     }
 
     public Runnable forwardTask() {
@@ -16,7 +24,13 @@ public class StudentA {
                 long product = (long) array[i] * array[i + 2];
                 sum += product;
 
-                System.out.println("Forward: " + array[i] + " * " + array[i + 2] + " = " + product);
+                output.accept(
+                        Thread.currentThread().getName()
+                                + ": [" + i + "] " + array[i]
+                                + " * [" + (i + 2) + "] " + array[i + 2]
+                                + " = " + product
+                );
+
             }
 
             sumForward = sum;
@@ -36,7 +50,12 @@ public class StudentA {
                 long product = (long) array[i] * array[i - 2];
                 sum += product;
 
-                System.out.println("Backward: " + array[i] + " * " + array[i - 2] + " = " + product);
+                output.accept(
+                        Thread.currentThread().getName()
+                                + ": [" + i + "] " + array[i]
+                                + " * [" + (i - 2) + "] " + array[i - 2]
+                                + " = " + product
+                );
             }
 
             sumBackward = sum;
