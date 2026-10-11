@@ -17,18 +17,10 @@ import java.util.Random;
 import java.util.function.Consumer;
 
 public class Main extends Application {
-
-    private final Button startButton =
-            new Button("Запустить 4 потока");
-
+    private final Button startButton = new Button("Запустить 4 потока");
     private final TextArea output = new TextArea();
-
-    private final Label status =
-            new Label("Готов к запуску");
-
-    private final Label results =
-            new Label("Результаты появятся после вычислений");
-
+    private final Label status = new Label("Готов к запуску");
+    private final Label results = new Label("Результаты появятся после вычислений");
     private final Label authors = new Label();
 
     private Thread[] threads = new Thread[0];
@@ -37,39 +29,21 @@ public class Main extends Application {
 
     @Override
     public void start(Stage stage) {
-
-        Label title = new Label(
-                "PCD — Лабораторная работа №1"
-        );
-
-        title.setStyle(
-                "-fx-font-size: 20px;" + "-fx-font-weight: bold;"
-        );
+        Label title = new Label("PCD — Лабораторная работа №1");
+        title.setStyle("-fx-font-size: 20px; -fx-font-weight: bold;");
 
         output.setEditable(false);
         output.setWrapText(true);
         output.setStyle("-fx-font-family: monospace;");
-
         results.setWrapText(true);
         results.setStyle("-fx-font-size: 14px;");
-
         authors.setStyle("-fx-font-size: 14px;");
-
         startButton.setOnAction(event -> runTasks());
 
-        VBox root = new VBox(
-                12,
-                title,
-                startButton,
-                status,
-                new Label("Журнал выполнения:"),
-                output,
-                new Label("Результаты:"),
-                results,
-                new Label("Авторы:"),
-                authors
-        );
-
+        VBox root = new VBox(12, title, startButton, status,
+                new Label("Журнал выполнения:"), output,
+                new Label("Результаты:"), results,
+                new Label("Авторы:"), authors);
         root.setPadding(new Insets(16));
         VBox.setVgrow(output, Priority.ALWAYS);
 
@@ -79,10 +53,7 @@ public class Main extends Application {
     }
 
     private void runTasks() {
-
-        // блокируем повторный запуск
         startButton.setDisable(true);
-
         output.clear();
         results.setText("Вычисление...");
         authors.setText("");
@@ -90,128 +61,82 @@ public class Main extends Application {
 
         int[] mas = new int[100];
         Random random = new Random();
-
         for (int i = 0; i < mas.length; i++) {
             mas[i] = random.nextInt(100) + 1;
         }
+        output.appendText("Массив:\n" + Arrays.toString(mas) + "\n\n");
 
-        output.appendText(
-                "Массив:\n" + Arrays.toString(mas) + "\n\n"
-        );
+        Consumer<String> log = message -> Platform.runLater(
+                () -> output.appendText(message + "\n"));
 
-        // вывод в JavaFX
-        Consumer<String> log = message ->
-                Platform.runLater(() ->
-                        output.appendText(message + "\n")
-                );
-
-        StudentA a = new StudentA(mas);
-        StudentB b = new StudentB(mas);
-
-        // передача единого вывода
-        a.setOutput(log);
-        b.setOutput(log);
+        StudentA a1 = new StudentA(mas, log);
+        StudentA a2 = new StudentA(mas, log);
+        StudentB b1 = new StudentB(mas, log);
+        StudentB b2 = new StudentB(mas, log);
 
         threads = new Thread[] {
-                new Thread(a.forwardTask(), "A-Th1"),
-                new Thread(a.backwardTask(), "A-Th2"),
-                new Thread(b.forwardTask(), "B-Th1"),
-                new Thread(b.backwardTask(), "B-Th2")
-
+                new Thread(a1, "A-Th1"),
+                new Thread(a2, "A-Th2"),
+                new Thread(b1, "B-Th1"),
+                new Thread(b2, "B-Th2")
         };
 
-        // координатор для запуска и ожидания завершения потоков
         Thread[] workers = threads;
+        // запускаем все четыре вычислительных потока.
+        for (Thread thread : workers) {
+            thread.setDaemon(true);
+            thread.start();
+        }
 
+        // вспомогательный поток ожидает завершения, чтобы окно не зависало.
         coordinator = new Thread(() -> {
-
-            for (Thread thread : workers) {
-                thread.start();
-            }
-
             try {
                 for (Thread thread : workers) {
                     thread.join();
                 }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-
-                for (Thread thread : workers) {
-                    thread.interrupt();
-                }
-
+                for (Thread thread : workers) thread.interrupt();
                 return;
             }
 
-            // обновление JavaFX после завершения
             Platform.runLater(() -> {
-
-                output.appendText(
-                        "\nВсе четыре потока завершены.\n"
-                );
-
+                output.appendText("\nВсе четыре вычислительных потока завершены.\n");
                 results.setText(
-                        "Student A:\n" +
-                                "  Th1 (Forward): " + a.getSumForward() + "\n" +
-                                "  Th2 (Backward): " + a.getSumBackward() + "\n\n" +
-                                "Student B:\n" +
-                                "  Th1 (Forward): " + b.getSumForward() + "\n" +
-                                "  Th2 (Backward): " + b.getSumBackward()
-                );
-
+                        "Никита — условие 1, с начала массива:\n"
+                                + "  A-Th1: " + a1.getSum() + "\n"
+                                + "  A-Th2: " + a2.getSum() + "\n\n"
+                                + "Влад — условие 2, с конца массива:\n"
+                                + "  B-Th1: " + b1.getSum() + "\n"
+                                + "  B-Th2: " + b2.getSum());
                 status.setText("Вычисления завершены");
-
                 showAuthors();
             });
-
         }, "Coordinator");
-
         coordinator.setDaemon(true);
         coordinator.start();
     }
 
     private void showAuthors() {
-
-        String text =
-                "Nichita Negru\n" +
-                        "Vlad Osadciuc\n" +
-                        "Группа: CR-243";
-
+        String text = "Nichita Negru\nVlad Osadciuc\nГруппа: CR-243";
         int[] index = {0};
 
-        typing = new Timeline(
-                new KeyFrame(Duration.millis(100), event -> {
-                    authors.setText(
-                            authors.getText() +
-                                    text.charAt(index[0]++)
-                    );
-                })
-        );
-
+        typing = new Timeline(new KeyFrame(Duration.millis(100), event -> {
+            authors.setText(authors.getText() + text.charAt(index[0]++));
+        }));
         typing.setCycleCount(text.length());
-
         typing.setOnFinished(event -> {
             status.setText("Работа завершена");
             startButton.setDisable(false);
         });
-
         typing.play();
     }
 
     @Override
     public void stop() {
-
-        if (typing != null) {
-            typing.stop();
-        }
-
-        for (Thread thread : threads) {
-            thread.interrupt();
-        }
-
-        if (coordinator != null) {
-            coordinator.interrupt();
-        }
+        if (typing != null) typing.stop();
+        if (coordinator != null) coordinator.interrupt();
+        for (Thread thread : threads) thread.interrupt();
     }
 
     public static void main(String[] args) {
