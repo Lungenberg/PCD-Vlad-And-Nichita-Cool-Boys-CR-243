@@ -10,6 +10,7 @@ public class StudentB implements Runnable {
         this.output = output;
     }
 
+
     @Override
     public void run() {
         long result = 0;
@@ -17,16 +18,28 @@ public class StudentB implements Runnable {
         int start = array.length - 1;
         if (start % 2 == 0) start--;
 
-        for (int i = start; i >= 3; i -= 4) {
+        for (int i = start; i >= 3; i -= 8) {
             if (Thread.currentThread().isInterrupted()) return;
 
-            long product = (long) array[i] * array[i - 2];
-            result += product;
+            long product1 = (long) array[i] * array[i - 2];
+            result += product1;
 
-            output.accept(Thread.currentThread().getName()
-                    + ": [" + i + "] " + array[i]
-                    + " * [" + (i - 2) + "] " + array[i - 2]
-                    + " = " + product);
+            if (i >= 7) {
+                long product2 = (long) array[i - 4] * array[i - 6];
+                result += product2;
+
+                output.accept(Thread.currentThread().getName()
+                        + ": [" + i + "] " + array[i]
+                        + " * [" + (i - 2) + "] " + array[i - 2]
+                        + " + [" + (i - 4) + "] " + array[i - 4]
+                        + " * [" + (i - 6) + "] " + array[i - 6]
+                        + " = " + (product1 + product2));
+            } else {
+                output.accept(Thread.currentThread().getName()
+                        + ": [" + i + "] " + array[i]
+                        + " * [" + (i - 2) + "] " + array[i - 2]
+                        + " = " + product1);
+            }
 
             try {
                 Thread.sleep(50);
@@ -38,6 +51,7 @@ public class StudentB implements Runnable {
 
         sum = result;
     }
+
 
     public long getSum() {
         return sum;

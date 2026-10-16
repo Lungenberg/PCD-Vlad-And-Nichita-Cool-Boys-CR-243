@@ -20,7 +20,6 @@ public class Main extends Application {
     private final Button startButton = new Button("Запустить 4 потока");
     private final TextArea output = new TextArea();
     private final Label status = new Label("Готов к запуску");
-    private final Label results = new Label("Результаты появятся после вычислений");
     private final Label authors = new Label();
 
     private Thread[] threads = new Thread[0];
@@ -35,15 +34,20 @@ public class Main extends Application {
         output.setEditable(false);
         output.setWrapText(true);
         output.setStyle("-fx-font-family: monospace;");
-        results.setWrapText(true);
-        results.setStyle("-fx-font-size: 14px;");
         authors.setStyle("-fx-font-size: 14px;");
         startButton.setOnAction(event -> runTasks());
 
-        VBox root = new VBox(12, title, startButton, status,
-                new Label("Журнал выполнения:"), output,
-                new Label("Результаты:"), results,
-                new Label("Авторы:"), authors);
+        VBox root = new VBox(
+                12,
+                title,
+                startButton,
+                status,
+                new Label("Журнал выполнения:"),
+                output,
+                new Label("Авторы:"),
+                authors
+        );
+
         root.setPadding(new Insets(16));
         VBox.setVgrow(output, Priority.ALWAYS);
 
@@ -55,7 +59,6 @@ public class Main extends Application {
     private void runTasks() {
         startButton.setDisable(true);
         output.clear();
-        results.setText("Вычисление...");
         authors.setText("");
         status.setText("Потоки выполняются...");
 
@@ -81,9 +84,8 @@ public class Main extends Application {
                 new Thread(b2, "B-Th2")
         };
 
-        Thread[] workers = threads;
         // запускаем все четыре вычислительных потока.
-        for (Thread thread : workers) {
+        for (Thread thread : threads) {
             thread.setDaemon(true);
             thread.start();
         }
@@ -91,27 +93,24 @@ public class Main extends Application {
         // вспомогательный поток ожидает завершения, чтобы окно не зависало.
         coordinator = new Thread(() -> {
             try {
-                for (Thread thread : workers) {
+                for (Thread thread : threads) {
                     thread.join();
                 }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                for (Thread thread : workers) thread.interrupt();
+                for (Thread thread : threads) thread.interrupt();
                 return;
             }
 
             Platform.runLater(() -> {
-                output.appendText("\nВсе четыре вычислительных потока завершены.\n");
-                results.setText(
-                        "Никита — условие 1, с начала массива:\n"
-                                + "  A-Th1: " + a1.getSum() + "\n"
-                                + "  A-Th2: " + a2.getSum() + "\n\n"
-                                + "Влад — условие 2, с конца массива:\n"
-                                + "  B-Th1: " + b1.getSum() + "\n"
-                                + "  B-Th2: " + b2.getSum());
+                output.appendText(
+                        "\nВсе четыре вычислительных потока завершены.\n"
+                );
+
                 status.setText("Вычисления завершены");
                 showAuthors();
             });
+
         }, "Coordinator");
         coordinator.setDaemon(true);
         coordinator.start();
