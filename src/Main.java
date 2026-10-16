@@ -115,7 +115,6 @@ public class Main extends Application {
         coordinator.setDaemon(true);
         coordinator.start();
     }
-
     private void showAuthors() {
         String text = "Nichita Negru\nVlad Osadciuc\nГруппа: CR-243";
         int[] index = {0};
