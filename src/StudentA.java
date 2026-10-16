@@ -10,7 +10,6 @@ public class StudentA implements Runnable {
         this.output = output;
     }
 
-
     @Override
     public void run() {
         long result = 0;
@@ -48,7 +47,6 @@ public class StudentA implements Runnable {
 
         sum = result;
     }
-
 
     public long getSum() {
         return sum;
