@@ -113,7 +113,6 @@ public class Main extends Application {
         }, "Coordinator");
         coordinator.start();
     }
-
     private void showAuthors() {
         String text = "Nichita Negru\nVlad Osadciuc\nГруппа: CR-243";
         int[] index = {0};
@@ -136,7 +135,14 @@ public class Main extends Application {
         for (Thread thread : threads) thread.interrupt();
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
         launch(args);
+
+        String text = "Nichita Negru\nVlad Osadciuc\nГруппа: CR-243";
+        for (int i = 0; i < text.length(); i++) {
+            System.out.print(text.charAt(i));
+            Thread.sleep(100);
+        }
+        System.out.println();
     }
 }
