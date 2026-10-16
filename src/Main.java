@@ -86,7 +86,6 @@ public class Main extends Application {
 
         // запускаем все четыре вычислительных потока.
         for (Thread thread : threads) {
-            thread.setDaemon(true);
             thread.start();
         }
 
@@ -112,7 +111,6 @@ public class Main extends Application {
             });
 
         }, "Coordinator");
-        coordinator.setDaemon(true);
         coordinator.start();
     }
 
